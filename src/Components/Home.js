@@ -21,7 +21,10 @@ class Home extends React.Component {
         this.state = {
             blogs: [],
             addModal: false,
-            blogAddText: ''
+            blogAddText: '',
+            blogUpdateId: 0,
+            blogUpdateText: '',
+            updateModal: false
         }
     }
 
@@ -54,6 +57,10 @@ class Home extends React.Component {
         this.setState({ blogAddText: event.target.value });
     }
 
+    handleChangeUpdateBlog = (event) => {
+        this.setState({ blogUpdateText: event.target.value });
+    }
+
     handleAddBlog = () => {
         const { blogAddText } = this.state;
         const addObj = {
@@ -70,8 +77,28 @@ class Home extends React.Component {
             .catch(err => console.log(err))
     }
 
+    handleUpdate = (event) => {
+        this.setState({ blogUpdateId: event.target.id, blogUpdateText: event.target.name, updateModal: true })
+    }
+
+    handleUpdateBlog = () => {
+        const { blogUpdateId, blogUpdateText } = this.state;
+        const updateObj = {
+            "blogMessage": blogUpdateText
+        };
+        axios({
+            method: 'PUT',
+            url: `http://localhost:8082/blog/updateblog/${blogUpdateId}`,
+            headers: { 'Content-Type': 'application/json' },
+            data: updateObj
+        }).then(response => axios("http://localhost:8082/blog/getblogs")
+            .then(res => this.setState({ blogs: res.data.blog, updateModal: false }))
+            .catch(err => console.log(err)))
+            .catch(err => console.log(err))
+    }
+
     render() {
-        const { blogs, addModal, blogAddText } = this.state;
+        const { blogs, addModal, blogAddText, blogUpdateText, updateModal } = this.state;
         return (
             <div>
                 <table className="table table-bordered table-hover table-striped">
@@ -90,7 +117,7 @@ class Home extends React.Component {
                                 <td>{index + 1}</td>
                                 <td>{item.blogMessage}</td>
                                 <td><button id={item._id} className="btn btn-warning" onClick={this.handleDetails}>Details</button></td>
-                                <td><button className="btn btn-primary btn-margin">Update</button>
+                                <td><button id={item._id} name={item.blogMessage} onClick={this.handleUpdate} className="btn btn-primary btn-margin">Update</button>
                                     <button id={item._id} className="btn btn-danger" onClick={this.handleDelete}>Delete</button>
                                 </td>
                             </tr>
@@ -103,10 +130,21 @@ class Home extends React.Component {
                     style={customStyles}
                 >
                     <div>
-                        <div className="modal-header">Add Blog</div>
+                        <div className="modal-header"><h3>Add Blog</h3></div>
                         <label>Blog : </label>
                         <input type="text" value={blogAddText} onChange={this.handleChangeAddBlog}></input>
-                        <button className="btn btn-success" onClick={this.handleAddBlog}>Add</button>
+                        <button className="btn btn-success" style={{ 'margin-left': '5px' }} onClick={this.handleAddBlog}>Add</button>
+                    </div>
+                </Modal>
+                <Modal
+                    isOpen={updateModal}
+                    style={customStyles}
+                >
+                    <div>
+                        <div className="modal-header"><h3>Update Blog</h3></div>
+                        <label>Blog : </label>
+                        <input type="text" value={blogUpdateText} onChange={this.handleChangeUpdateBlog}></input>
+                        <button className="btn btn-success" style={{ 'margin-left': '5px' }} onClick={this.handleUpdateBlog}>Update</button>
                     </div>
                 </Modal>
             </div>
